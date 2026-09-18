@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Tarjeta de Producto — Perfumería</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream: #F3EEE2;
+    --bark: #3B3226;
+    --olive: #5C6B44;
+    --olive-dark: #43502F;
+    --sage: #B9C4A4;
+    --ochre: #C08A4E;
+    --line: #DCD5C2;
+    --white: #FFFDF8;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  body{
+    background: var(--cream);
+    font-family:'Jost', sans-serif;
+    color: var(--bark);
+    padding: 48px 24px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:32px;
+    justify-content:center;
+  }
+
+  .card{
+    width: 280px;
+    background: var(--white);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    transition: transform .25s ease, box-shadow .25s ease;
+    position: relative;
+  }
+
+  .card:hover{
+    transform: translateY(-4px);
+    box-shadow: 0 14px 28px -14px rgba(59,50,38,0.35);
+  }
+
+  .card:hover .add-btn{
+    background: var(--olive-dark);
+  }
+
+  .card:focus-within{
+    outline: 2px solid var(--olive);
+    outline-offset: 2px;
+  }
+
+  .media{
+    position: relative;
+    height: 260px;
+    background: linear-gradient(155deg, #E4DEC9 0%, #CFC7A9 55%, #B9AE85 100%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+
+  /* Botanical line-art motif, drawn in CSS/SVG — no external assets */
+  .leaf-motif{
+    position:absolute;
+    inset:0;
+    opacity:0.5;
+  }
+
+  .bottle{
+    position: relative;
+    width: 74px;
+    height: 130px;
+    z-index: 2;
+  }
+  .bottle .cap{
+    width: 30px; height: 20px;
+    background: var(--olive-dark);
+    margin: 0 auto;
+    border-radius: 3px 3px 0 0;
+  }
+  .bottle .neck{
+    width: 14px; height: 12px;
+    background: #EFE9D8;
+    margin: 0 auto;
+  }
+  .bottle .body{
+    width: 74px; height: 98px;
+    background: linear-gradient(160deg, #F6F1E3, #E3DCC4);
+    border: 1px solid rgba(59,50,38,0.15);
+    border-radius: 6px;
+  }
+
+  .badge{
+    position:absolute;
+    top:14px; left:14px;
+    background: var(--olive-dark);
+    color: var(--white);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border-radius: 2px;
+  }
+
+  .wish{
+    position:absolute;
+    top:12px; right:12px;
+    width:32px; height:32px;
+    border-radius:50%;
+    background: rgba(255,253,248,0.85);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    border: none;
+  }
+  .wish svg{ width:16px; height:16px; stroke: var(--olive-dark); fill:none; stroke-width:1.6; }
+
+  .content{
+    padding: 18px 18px 20px;
+  }
+
+  .brand{
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--olive);
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .name{
+    font-family:'Cormorant Garamond', serif;
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.15;
+    margin-bottom: 10px;
+  }
+
+  .notes{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-bottom: 14px;
+  }
+  .note{
+    font-size: 10.5px;
+    letter-spacing:0.02em;
+    color: var(--olive-dark);
+    background: var(--sage);
+    padding: 3px 9px;
+    border-radius: 20px;
+  }
+
+  .rating{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-bottom: 12px;
+    font-size: 12.5px;
+    color: var(--bark);
+    opacity: 0.75;
+  }
+  .stars{ color: var(--ochre); letter-spacing: 1px; font-size: 13px; }
+
+  .divider{
+    border: none;
+    border-top: 1px solid var(--line);
+    margin: 14px 0;
+  }
+
+  .bottom-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+
+  .price{
+    font-family:'Cormorant Garamond', serif;
+    font-size: 21px;
+    font-weight: 600;
+  }
+  .price span{
+    font-size: 12px;
+    font-family:'Jost', sans-serif;
+    color: var(--bark);
+    opacity: 0.6;
+    margin-left: 4px;
+  }
+
+  .add-btn{
+    background: var(--olive);
+    color: var(--white);
+    border: none;
+    padding: 10px 16px;
+    font-family:'Jost', sans-serif;
+    font-size: 12.5px;
+    letter-spacing: 0.03em;
+    border-radius: 3px;
+    cursor: pointer;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    transition: background .2s ease;
+  }
+  .add-btn svg{ width:14px; height:14px; }
+
+  .card-label{
+    text-align:center;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform:uppercase;
+    color: var(--olive-dark);
+    opacity: 0.55;
+    margin-top: 10px;
+  }
+
+  .wrap{ display:flex; flex-direction:column; align-items:center; }
+
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="card">
+    <div class="media">
+      <svg class="leaf-motif" viewBox="0 0 280 260" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 250 C 40 190, 30 120, 70 70" stroke="#3B3226" stroke-opacity="0.12" stroke-width="1.4" fill="none"/>
+        <path d="M35 210 C 55 200, 60 190, 55 175" stroke="#3B3226" stroke-opacity="0.12" stroke-width="1.2" fill="none"/>
+        <path d="M45 175 C 62 168, 68 158, 62 145" stroke="#3B3226" stroke-opacity="0.12" stroke-width="1.2" fill="none"/>
+        <path d="M260 20 C 235 55, 245 90, 215 110" stroke="#3B3226" stroke-opacity="0.1" stroke-width="1.2" fill="none"/>
+      </svg>
+      <span class="badge">Diseñador</span>
+      <button class="wish" aria-label="Agregar a favoritos">
+        <svg viewBox="0 0 24 24"><path d="M12 21s-7-4.35-9.5-8.5C.5 8.5 3 5 6.5 5c2 0 3.5 1.2 4.5 2.8C12 6.2 13.5 5 15.5 5 19 5 21.5 8.5 20.5 12.5 18 16.65 12 21 12 21z"/></svg>
+      </button>
+      <div class="bottle">
+        <div class="cap"></div>
+        <div class="neck"></div>
+        <div class="body"></div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="brand">Bosque &amp; Cedro</div>
+      <h3 class="name">Raíz Dorada</h3>
+
+      <div class="notes">
+        <span class="note">Bergamota</span>
+        <span class="note">Vetiver</span>
+        <span class="note">Ámbar</span>
+      </div>
+
+      <div class="rating">
+        <span class="stars">★★★★☆</span>
+        <span>4.2 · 186 reseñas</span>
+      </div>
+
+      <hr class="divider">
+
+      <div class="bottom-row">
+        <div class="price">$189.000 <span>/ 50ml</span></div>
+        <button class="add-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#FFFDF8" stroke-width="1.8"><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="M2 3h2l2.4 12.4a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.6L21 7H6"/></svg>
+          Agregar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-label">Componente reutilizable — Tarjeta de Producto</div>
+</div>
+
+</body>
+</html>
