@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+{% block title %}Reportes{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+<li class="breadcrumb-item active">Reportes</li>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="fw-bold mb-0"><i class="bi bi-bar-chart-line me-2 text-primary"></i>Reportes</h4>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('reports.index', type=report_type, days=days, fmt='csv') }}"
+       class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar CSV
+    </a>
+    <a href="{{ url_for('reports.index', type=report_type, days=days, fmt='json') }}"
+       class="btn btn-outline-secondary btn-sm" target="_blank">
+      <i class="bi bi-braces me-1"></i>JSON
+    </a>
+  </div>
+</div>
+
+<!-- Selector de reporte -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body py-3">
+    <form method="GET" class="row g-2 align-items-end">
+      <div class="col-auto">
+        <label class="form-label small fw-semibold mb-1">Tipo de reporte</label>
+        <div class="btn-group">
+          {% set type_labels = {'movements': ('bi-list-ul','Movimientos'), 'popular': ('bi-trophy','Mas Vendidos'), 'low_stock': ('bi-exclamation-triangle','Stock Bajo')} %}
+          {% for t, (icon, label) in type_labels.items() %}
+          <a href="{{ url_for('reports.index', type=t, days=days) }}"
+             class="btn {{ 'btn-primary' if report_type == t else 'btn-outline-secondary' }}">
+            <i class="bi {{ icon }} me-1"></i>{{ label }}
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% if report_type != 'low_stock' %}
+      <div class="col-auto">
+        <label class="form-label small fw-semibold mb-1">Periodo</label>
+        <div class="btn-group">
+          {% for d in [7, 15, 30, 60, 90] %}
+          <a href="{{ url_for('reports.index', type=report_type, days=d) }}"
+             class="btn btn-sm {{ 'btn-primary' if days == d else 'btn-outline-secondary' }}">{{ d }}d</a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<!-- Titulo del reporte -->
+<div class="mb-3">
+  <h6 class="text-muted fw-normal">
+    {{ report_data.get('title', '') }}
+    {% if report_data.get('total') is not none %}
+    — <strong>{{ report_data.total }}</strong> registros
+    {% endif %}
+  </h6>
+</div>
+
+<!-- Contenido del reporte -->
+{% if report_type == 'movements' %}
+  {% set movements = report_data.get('data', []) %}
+  {% if movements %}
+  <!-- Grafica -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body"><canvas id="reportChart" height="80"></canvas></div>
+  </div>
+  {% endif %}
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover table-bordered align-middle mb-0 fs-6">
+        <thead style="background:#2c3e50; color:#fff;">
+          <tr>
+            <th class="px-3 py-3">Fecha</th>
+            <th class="px-3 py-3">Producto</th>
+            <th class="px-3 py-3 text-center">Tipo</th>
+            <th class="px-3 py-3 text-center">Cantidad</th>
+            <th class="px-3 py-3 text-center">Stock Antes</th>
+            <th class="px-3 py-3 text-center">Stock Despues</th>
+            <th class="px-3 py-3 text-end">Precio</th>
+            <th class="px-3 py-3">Notas</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in movements %}
+          <tr class="{{ 'table-success' if m.movement_type == 'entry' else 'table-danger' }} bg-opacity-10">
+            <td class="px-3 py-3 text-nowrap fw-semibold text-dark">
+              <i class="bi bi-calendar3 me-1 text-muted"></i>
+              {{ m.created_at.strftime('%d/%m/%Y') }}
+              <div class="text-muted small">{{ m.created_at.strftime('%H:%M') }}</div>
+            </td>
+            <td class="px-3 py-3">
+              <a href="{{ url_for('products.detail', product_id=m.product_id) }}"
+                 class="text-decoration-none fw-bold text-primary fs-6">
+                {{ m.product.name if m.product else '–' }}
+              </a>
+            </td>
+            <td class="px-3 py-3 text-center">
+              {% if m.movement_type == 'entry' %}
+              <span class="badge bg-success fs-6 px-3 py-2">
+                <i class="bi bi-arrow-down-circle me-1"></i>Entrada
+              </span>
+              {% else %}
+              <span class="badge bg-danger fs-6 px-3 py-2">
+                <i class="bi bi-arrow-up-circle me-1"></i>Salida
+              </span>
+              {% endif %}
+            </td>
+            <td class="px-3 py-3 text-center">
+              <span class="fw-bold fs-5">{{ m.quantity }}</span>
+            </td>
+            <td class="px-3 py-3 text-center text-muted fw-semibold">{{ m.quantity_before }}</td>
+            <td class="px-3 py-3 text-center fw-bold {{ 'text-danger' if m.quantity_after <= m.product.min_stock else 'text-success' }}">
+              {{ m.quantity_after }}
+            </td>
+            <td class="px-3 py-3 text-end fw-semibold text-dark">
+              {{ ('$%.2f'|format(m.unit_price)) if m.unit_price else '—' }}
+            </td>
+            <td class="px-3 py-3 text-muted">{{ m.notes or '—' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8" class="text-center text-muted py-5"><i class="bi bi-inbox fs-2 d-block mb-2"></i>Sin movimientos en este periodo.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+{% elif report_type == 'popular' %}
+  {% set rows = report_data.get('data', []) %}
+  <div class="row g-4">
+    {% if rows %}
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body"><canvas id="reportChart" height="200"></canvas></div>
+      </div>
+    </div>
+    {% endif %}
+    <div class="col-lg-{{ '7' if rows else '12' }}">
+      <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead class="table-light"><tr><th>#</th><th>Producto</th><th class="text-end">Unidades Vendidas</th></tr></thead>
+            <tbody>
+              {% for r in rows %}
+              <tr>
+                <td>
+                  {% if loop.index <= 3 %}
+                  <span class="badge bg-{{ ['warning','secondary','danger'][loop.index-1] }} rounded-circle">{{ loop.index }}</span>
+                  {% else %}{{ loop.index }}{% endif %}
+                </td>
+                <td class="fw-semibold">{{ r.name }}</td>
+                <td class="text-end">
+                  <div class="d-flex align-items-center justify-content-end gap-2">
+                    <div class="progress flex-grow-1" style="height:8px;max-width:100px">
+                      <div class="progress-bar bg-primary" style="width:{{ (r.total_sold / rows[0].total_sold * 100)|int }}%"></div>
+                    </div>
+                    <span class="fw-bold">{{ r.total_sold }}</span>
+                  </div>
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="3" class="text-center text-muted py-5"><i class="bi bi-inbox fs-2 d-block mb-2"></i>Sin ventas en este periodo.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% elif report_type == 'low_stock' %}
+  {% set products = report_data.get('data', []) %}
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light"><tr><th>Producto</th><th>SKU</th><th>Categoria</th><th class="text-center">Stock Actual</th><th class="text-center">Stock Minimo</th><th class="text-center">Deficit</th><th>Acciones</th></tr></thead>
+        <tbody>
+          {% for p in products %}
+          <tr>
+            <td class="fw-semibold">{{ p.name }}</td>
+            <td><code class="text-muted">{{ p.sku or '—' }}</code></td>
+            <td>{{ p.category.name if p.category else '—' }}</td>
+            <td class="text-center"><span class="badge bg-danger rounded-pill">{{ p.quantity }}</span></td>
+            <td class="text-center">{{ p.min_stock }}</td>
+            <td class="text-center text-danger fw-bold">{{ p.min_stock - p.quantity }}</td>
+            <td>
+              <a href="{{ url_for('movements.add_movement', product_id=p.id) }}" class="btn btn-sm btn-success">
+                <i class="bi bi-arrow-down-circle me-1"></i>Reponer
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" class="text-center text-muted py-5">
+            <i class="bi bi-check-circle text-success fs-2 d-block mb-2"></i>Todo el stock esta en orden.
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if report_type == 'movements' and report_data.get('data') %}
+<script>
+// Agrupar movimientos por dia
+const byDay = {};
+{% for m in report_data.get('data', []) %}
+const d{{ loop.index }} = "{{ m.created_at.strftime('%d/%m') }}";
+byDay[d{{ loop.index }}] = byDay[d{{ loop.index }}] || {entry:0, exit:0};
+byDay[d{{ loop.index }}].{{ m.movement_type }} += {{ m.quantity }};
+{% endfor %}
+const labels  = Object.keys(byDay);
+const entries = labels.map(k => byDay[k].entry);
+const exits   = labels.map(k => byDay[k].exit);
+
+new Chart(document.getElementById('reportChart'), {
+  type: 'bar',
+  data: {
+    labels,
+    datasets: [
+      {
+        label: 'Entradas',
+        data: entries,
+        backgroundColor: 'rgba(25,135,84,0.85)',
+        borderColor: '#198754',
+        borderWidth: 2,
+        borderRadius: 6,
+        borderSkipped: false,
+      },
+      {
+        label: 'Salidas',
+        data: exits,
+        backgroundColor: 'rgba(220,53,69,0.85)',
+        borderColor: '#dc3545',
+        borderWidth: 2,
+        borderRadius: 6,
+        borderSkipped: false,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: { font: { size: 14 }, padding: 20 }
+      },
+      tooltip: {
+        callbacks: {
+          label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} unidades`
+        }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: { precision: 0, font: { size: 13 } },
+        grid: { color: 'rgba(0,0,0,0.06)' }
+      },
+      x: {
+        ticks: { font: { size: 13 } },
+        grid: { display: false }
+      }
+    }
+  }
+});
+</script>
+{% elif report_type == 'popular' and report_data.get('data') %}
+<script>
+new Chart(document.getElementById('reportChart'), {
+  type: 'doughnut',
+  data: {
+    labels: {{ report_data.data | map(attribute='name') | list | tojson }},
+    datasets: [{ data: {{ report_data.data | map(attribute='total_sold') | list | tojson }},
+      backgroundColor: ['#0d6efd','#6610f2','#0dcaf0','#198754','#ffc107','#dc3545','#fd7e14','#20c997','#6c757d','#adb5bd']
+    }]
+  },
+  options: { responsive:true, plugins:{ legend:{ position:'right' } } }
+});
+</script>
+{% endif %}
+{% endblock %}

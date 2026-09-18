@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('products.list_products') }}">Productos</a></li>
+<li class="breadcrumb-item active">{{ product.name }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <!-- Info del producto -->
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div>
+            <h5 class="fw-bold mb-1">{{ product.name }}</h5>
+            {% if product.sku %}
+            <code class="text-muted small">{{ product.sku }}</code>
+            {% endif %}
+          </div>
+          {% if product.is_low_stock %}
+          <span class="badge bg-danger"><i class="bi bi-exclamation-triangle me-1"></i>Stock Bajo</span>
+          {% else %}
+          <span class="badge bg-success">En Stock</span>
+          {% endif %}
+        </div>
+
+        {% if product.description %}
+        <p class="text-muted small">{{ product.description }}</p>
+        {% endif %}
+
+        {% if product.category %}
+        <div class="mb-3">
+          <span class="badge bg-secondary-subtle text-secondary border">
+            <i class="bi bi-tag me-1"></i>{{ product.category.name }}
+          </span>
+        </div>
+        {% endif %}
+
+        <hr>
+        <div class="row g-3 text-center">
+          <div class="col-4">
+            <div class="text-muted small">Stock</div>
+            <div class="fs-4 fw-bold {{ 'text-danger' if product.is_low_stock else 'text-success' }}">
+              {{ product.quantity }}
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="text-muted small">Minimo</div>
+            <div class="fs-4 fw-bold">{{ product.min_stock }}</div>
+          </div>
+          <div class="col-4">
+            <div class="text-muted small">Margen</div>
+            <div class="fs-4 fw-bold {{ 'text-success' if product.profit_margin >= 20 else 'text-warning' }}">
+              {{ "%.0f"|format(product.profit_margin) }}%
+            </div>
+          </div>
+        </div>
+        <hr>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Precio compra:</span>
+          <span class="fw-semibold">${{ "%.2f"|format(product.purchase_price) }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Precio venta:</span>
+          <span class="fw-semibold">${{ "%.2f"|format(product.sale_price) }}</span>
+        </div>
+        <div class="d-flex justify-content-between">
+          <span class="text-muted">Valor en stock:</span>
+          <span class="fw-bold text-primary">
+            ${{ "%.2f"|format(product.quantity * product.purchase_price) }}
+          </span>
+        </div>
+        <hr>
+        <div class="d-grid gap-2">
+          <a href="{{ url_for('movements.add_movement', product_id=product.id) }}"
+             class="btn btn-success"><i class="bi bi-arrow-left-right me-2"></i>Registrar Movimiento</a>
+          <a href="{{ url_for('products.edit_product', product_id=product.id) }}"
+             class="btn btn-outline-primary"><i class="bi bi-pencil me-2"></i>Editar Producto</a>
+        </div>
+      </div>
+      <div class="card-footer text-muted small bg-white">
+        Creado: {{ product.created_at.strftime('%d/%m/%Y') }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Historial de movimientos -->
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white border-0 fw-semibold py-3">
+        <i class="bi bi-clock-history me-2 text-primary"></i>Historial de Movimientos
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Fecha</th>
+              <th>Tipo</th>
+              <th class="text-center">Cantidad</th>
+              <th class="text-center">Stock</th>
+              <th>Precio Unit.</th>
+              <th>Notas</th>
+              <th>Usuario</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in movements %}
+            <tr>
+              <td class="text-muted small">{{ m.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+              <td>
+                {% if m.movement_type == 'entry' %}
+                <span class="badge bg-success-subtle text-success border border-success">
+                  <i class="bi bi-arrow-down-circle me-1"></i>Entrada
+                </span>
+                {% else %}
+                <span class="badge bg-danger-subtle text-danger border border-danger">
+                  <i class="bi bi-arrow-up-circle me-1"></i>Salida
+                </span>
+                {% endif %}
+              </td>
+              <td class="text-center fw-bold">{{ m.quantity }}</td>
+              <td class="text-center">
+                <span class="text-muted">{{ m.quantity_before }}</span>
+                <i class="bi bi-arrow-right text-muted mx-1 small"></i>
+                <span class="{{ 'text-danger fw-bold' if m.quantity_after <= product.min_stock else '' }}">
+                  {{ m.quantity_after }}
+                </span>
+              </td>
+              <td>{{ ('$%.2f'|format(m.unit_price)) if m.unit_price else '—' }}</td>
+              <td class="text-muted small">{{ m.notes or '—' }}</td>
+              <td class="text-muted small">{{ m.user.name if m.user else '—' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="7" class="text-center text-muted py-4">Sin movimientos registrados</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overlay — Prototipo de Interfaz</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a href="index.html" class="back-link">← Todos los prototipos</a>
+
+<header class="header-overlay">
+  <div class="logo">LOGO</div>
+  <button class="hamburger" data-toggle="#overlay-nav" aria-label="Abrir menú">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<nav id="overlay-nav" class="overlay-nav">
+  <button class="close-btn" data-toggle="#overlay-nav" aria-label="Cerrar menú">&times;</button>
+  <ul>
+    <li><a href="#">Inicio</a></li>
+    <li><a href="#">Nosotros</a></li>
+    <li><a href="#">Servicios</a></li>
+    <li><a href="#">Contacto</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <span class="tag">Overlay</span>
+  <h1>Encabezado Overlay</h1>
+  <p>Al hacer clic en el ícono de menú, se abre una pantalla completa a modo de superposición con los enlaces centrados y un botón de cierre. Pruébalo arriba.</p>
+  <button class="btn">Comenzar</button>
+</section>
+
+<section class="cards">
+  <div class="card"><h3>Pantalla completa</h3><p>El menú toma todo el protagonismo al abrirse.</p></div>
+  <div class="card"><h3>Enfocado</h3><p>Sin distracciones mientras el usuario navega.</p></div>
+  <div class="card"><h3>Dramático</h3><p>Aporta una transición vistosa y moderna.</p></div>
+</section>
+
+<footer>© 2026 Prototipo de interfaz — Overlay</footer>
+<script src="script.js"></script>
+</body>
+</html>
